@@ -23,4 +23,6 @@ Area under the ROC(Receiver Operator Characteristic) curve.
   
 I have used real-life credit card transaction dataset from <b>data-flair</b> website and is available in this repository. It contains a log of 284807 real life credit card transactions and has all of them identified as fraudulent or not. </p>  
 
-#### For complete workigs please refer to the pdf file.  
+#### For complete workigs please refer to the [pdf](https://github.com/Lord-DVD/CC-Fraud/blob/main/Testing_Different_ML_Algorithms.pdf) file.  
+
+>Kindly use the download button as the file contains some very large models and git-hub may have issues showing the preview of the file
