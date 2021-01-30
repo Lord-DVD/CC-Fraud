@@ -1,4 +1,4 @@
-# Comparative analysis of most commonly used ML algorithms to test efficiency of them to detect fraudulent credit card transactions  
+# Comparative analysis of most commonly used ML algorithms to test efficiency of them at detecting fraudulent credit card transactions  
   
 ## Introduction  
 
