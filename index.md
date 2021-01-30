@@ -1,37 +1,26 @@
-## Welcome to GitHub Pages
+# Comparative analysis of most commonly used ML algorithms to test efficiency of them to detect fraudulent credit card transactions  
+  
+## Introduction  
 
-You can use the [editor on GitHub](https://github.com/Lord-DVD/CC-Fraud/edit/gh-pages/index.md) to maintain and preview the content for your website in Markdown files.
+<p> The aim of this project is to build a classifier that can detect fraudulent credit card transactions using
+several machine learning algorithms such as logistic regression, decision trees, artificial neural network
+and gradient boosting. And determine which algorithm gives best results for given use case scenario and
+should be recommended in real life application using real life credit card transaction data. </p>  
 
-Whenever you commit to this repository, GitHub Pages will run [Jekyll](https://jekyllrb.com/) to rebuild the pages in your site, from the content in your Markdown files.
+## Algorithms tested  
 
-### Markdown
+- Logistic Regression  
+- Decision Tree  
+- Artificial Nueral Network  
+- Gradient Boosting  
 
-Markdown is a lightweight and easy-to-use syntax for styling your writing. It includes conventions for
+## Method used to compare the models  
 
-```markdown
-Syntax highlighted code block
+Area under the ROC(Receiver Operator Characteristic) curve.
+<p> It is a graphical plot used to show the diagnostic ability of binary classifiers. Such as in our case fraud/not fraud. ROC is created using plotting the True positive rate (TPR) against the false positive rate (FPR). Hence it shows the trade-off between sensitivity and specificity. Hence closer the curve is to top left of the graph better fit of the model and closer it is to the 45-degree line, less accurate the fit. </p>  
 
-# Header 1
-## Header 2
-### Header 3
+## Dataset Used  
+  
+I have used real-life credit card transaction dataset from <b>data-flair</b> website and is available in this repository. It contains a log of 284807 real life credit card transactions and has all of them identified as fraudulent or not. </p>  
 
-- Bulleted
-- List
-
-1. Numbered
-2. List
-
-**Bold** and _Italic_ and `Code` text
-
-[Link](url) and ![Image](src)
-```
-
-For more details see [GitHub Flavored Markdown](https://guides.github.com/features/mastering-markdown/).
-
-### Jekyll Themes
-
-Your Pages site will use the layout and styles from the Jekyll theme you have selected in your [repository settings](https://github.com/Lord-DVD/CC-Fraud/settings). The name of this theme is saved in the Jekyll `_config.yml` configuration file.
-
-### Support or Contact
-
-Having trouble with Pages? Check out our [documentation](https://docs.github.com/categories/github-pages-basics/) or [contact support](https://support.github.com/contact) and we’ll help you sort it out.
+#### For complete workigs please refer to the [pdf](https://github.com/Lord-DVD/CC-Fraud/blob/main/Testing_Different_ML_Algorithms.pdf) file. 
