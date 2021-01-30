@@ -1,0 +1,203 @@
+---
+output: 
+  html_document: 
+    toc: yes
+    toc_float: true
+    fig_caption: yes
+    keep_md: yes
+  pdf_document: 
+    toc: yes
+    fig_caption: yes
+title: "Comparing several machine learning algorithms to recommend most suitable model to detect fraudulent credit card transactions using R"
+author: Vatsal Desai
+abstract: "The aim of this project is to build a classifier that can detect fraudulent credit card transactions using several machine learning algorithms such as logistic regression, decision trees, artificial neural network and gradient boosting. And determine which algorithm gives best results for given use case scenario and should be recommended in real life application using real life credit card transaction data."
+date: "`r format(Sys.time(), '%B %d %Y')`"
+---
+\newpage  
+# 1. Importing the dataset  
+  
+In the section I shall first introduce and import the dataset that I have used in the whole project. That is the credit card transaction dataset available on *data-flair* website and can be easily downloaded from [**here**](https://drive.google.com/file/d/1CTAlmlREFRaEN3NoHHitewpqAtWS5cVQ/view) and also I shall be including several libraries here to be able to better explore and handle the given data.  
+```{r, DatImport, cache=TRUE}
+library(ranger)
+library(caret)
+library(data.table)
+creditcard_data <- read.csv("creditcard.csv",header = TRUE)
+```
+\newpage  
+# 2. Data Exploration  
+  
+In this section I shall explore the data that is now in our *creditcard_data* dataframe. I will proceed by displaying head, tail, column names and summary statistics of the dataset to get an idea of what we are working with.  
+```{r}
+dim(creditcard_data)
+head(creditcard_data,6)
+tail(creditcard_data,6)
+```
+As we can see from the head and tail of the data, that there are total 31 different variables and 284807 observation of them. To check the important variables or choose our decision variables we shall check their names first.  
+```{r}
+names(creditcard_data)
+```
+As we can see there are only 3 named variables in the dataset which are  
+- Time  
+- Amount  
+- Class  
+Other variable names have been removed or hidden because of them being proprietary information or internal commercial information to protect the company privacy and to allow them to maintain the competitive edge in market.
+Here time is pretty much self explanatory as it records time of the particular transaction in question. So we shall see what classes are present and what amounts of transactions are made.  
+```{r}
+table(creditcard_data$Class)
+summary(creditcard_data$Amount)
+var(creditcard_data$Amount)
+sd(creditcard_data$Amount)
+```
+Now we have a good general idea of the amount of transactions made and they are classified into 2 classes. Where class 0 are normal credit card transactions and class 1 transactions that are flagged as fraudulent by the system. In short:  
+- *Class 0* - Non-fraudulent  
+- *Class 1* - Fraudulent  
+  
+\newpage  
+  
+# 3. Data manipulation  
+  
+In this section I shall scale the data using *scale()* function. I will apply this the the amount component of the credit card data. Scaling is also known as feature standardization. With the help of scaling, the data is structured according to a specified range. Therefor, there are no extreme values in our dataset that might interfere with the functioning of the model. We shall carry it out as follows:  
+```{r, DataScaling, cache=TRUE}
+creditcard_data$Amount <- scale(creditcard_data$Amount)
+NewData <- creditcard_data[,-c(1)]
+head(NewData)
+```
+\newpage  
+# 4. Data Modeling  
+  
+After now that the dataset has been standardized, we shall split it into 2 parts; training data and test data, with a split ration of 80-20. Which means 80% of the data shall be used to train the model while we shall test the trained model using the remaining 20% of the data.  
+```{r}
+library(caTools)
+set.seed(69420)
+data_sample <- sample.split(NewData$Class,SplitRatio = 0.80)
+train_data <- subset(NewData,data_sample==TRUE)
+test_data <- subset(NewData,data_sample==FALSE)
+dim(train_data)
+dim(test_data)
+```
+\newpage  
+  
+# 5. Fitting Logistic Regression Model  
+  
+In this section we shall fit the first model. We begin with logistic regression. A logistic regression is used to model outcome probabilities of a class such as pass/fail, negative/positive or as in our case fraud/not fraud. We proceed to implement this model on our training data as following:  
+```{r, LogisticModel, cache=TRUE}
+Logistic_Model <- glm(Class~.,train_data,family = binomial())
+summary(Logistic_Model)
+```
+Now that we have summarized our model we shall visualize it.  
+```{r fig.align='center', message=FALSE, warning=FALSE, cache=TRUE}
+plot(Logistic_Model)
+```
+Now that we have our model, in order to asses it; we will delineate the ROC curve. ROC is known as the Receiver Operator Characteristic. It is a graphical plot used to show the diagnostic ability of binary classifiers. Such as in our case fraud/not fraud. ROC is created using plotting the True positive rate (TPR) against the false positive rate (FPR). Hence it shows the trade-off between sensitivity and specificity. Hence closer the curve is to top left of the graph better fit of the model and closer it is to the 45-degree line, less accurate the fit.  
+For this, we will first import the ROC package and then plot our ROC curve to analyze its performance.  
+```{r fig.align='center'}
+library(pROC)
+lr.predict <- predict(Logistic_Model,test_data, probability = TRUE)
+auc.gbm <- roc(test_data$Class, lr.predict, plot = TRUE, col = "blue")
+```
+As we can see, a simple straight forward logistic regression model also gives us a very good fit to the test data and we can use this to classify future fraudulent transactions as well. But we shall see that using other algorithms can we make this model even better or not.  
+\newpage  
+  
+# 6. Fitting a Decision Tree Model  
+  
+In this section we shall implement a decision tree algorithm and plot it using *rpart* and *rpart.plot* packages. Decision trees are plots of outcomes of decisions. And these outcomes are basically a consequence through which we can conclude as to what class the object belongs to. Also we shall use specifically recursive parting to plot the decision tree. We shall implement it as follows:  
+```{r,DesicionTree, cache=TRUE, fig.align='center'}
+library(rpart)
+library(rpart.plot)
+decisionTree_model <- rpart(Class~.,creditcard_data,method = 'class')
+predicted_val <- predict(decisionTree_model,creditcard_data,type='class')
+probability <- predict(decisionTree_model,creditcard_data,type='prob')
+rpart.plot(decisionTree_model,extra = 108)
+```
+From this decision tree we can see that which variables are key in terms of determining which transactions might be fraudulent. Here green blocks show fraudulent transactions and blue blocks suggest non-fraudulent transactions. Also darker the shade of a block with higher certainty we can say if a transaction is fraudulent or not. The number in first row of each block is which class the transaction belongs to and second row shows the portion of above chunk going into the particular block.  
+\newpage  
+  
+# 7. Artificial Neural Network  
+  
+Artificial Neural Networks are a type of machine learning algorithm that are modeled after the human nervous system. The ANN models are able to learn the patterns using historical data and are able to perform classification on the input data.  
+We import the *neuralnet* package that would allow us to implement our ANNs. Then we proceed to plot it using *plot()* function.  
+Here, in the case of Artificial Neural Networks, there is a range of values that is between 1 and 0. We set a threshold as 0.5; that is, values above 0.5 will correspond to class 1(ie fraudulent) and the rest will be 0(ie non-fraudulent). We implement this as follows:  
+```{r, NeuralnetTrain, cache=TRUE}
+library(neuralnet)
+ANN_model <- neuralnet (Class~.,train_data,linear.output=FALSE)
+```
+```{r fig.align='center'}
+plot(ANN_model, rep = "best")
+```
+
+Now we shall use this trained model to check versus our test data and see how well it fits.  
+```{r, NueralnetTest, cache=TRUE}
+predANN <- compute(ANN_model,test_data)
+resultANN <- predANN$net.result
+resultANN <- ifelse(resultANN>0.5,1,0)
+```
+\newpage  
+  
+# 8. Gradient Boosting (GBM)  
+  
+This is a popular machine learning algorithm that is used to perform classification and regression tasks. This model comprises of several underlying ensemble models like weak decision trees. These decision trees combine together to form a strong model of gradient boosting. We will implement this as follows:  
+```{r}
+library(gbm, quietly = TRUE)
+```
+First we shall get the time to train the GB Model.  
+```{r, GrediantBoosting, cache=TRUE}
+system.time(
+       model_gbm <- gbm(Class ~ .
+               , distribution = "bernoulli"
+               , data = rbind(train_data, test_data)
+               , n.trees = 500
+               , interaction.depth = 3
+               , n.minobsinnode = 100
+               , shrinkage = 0.01
+               , bag.fraction = 0.5
+               , train.fraction = nrow(train_data) / (nrow(train_data) + nrow(test_data))
+               )
+)
+```
+Now that we have it, we shall determine the best iteration based on test data.  
+```{r}
+gbm.iter <- gbm.perf(model_gbm, method = "test")
+```
+Now we shall influence this model using the gradient boosting algorithm and plot it. And also create a second prediction variable for the test data as well.  
+```{r fig.align='center'}
+model.influence <- relative.influence(model_gbm, n.trees = gbm.iter, sort. = TRUE)
+plot(model_gbm)
+gbm_test <- predict(model_gbm, newdata = test_data, n.trees = gbm.iter)
+```
+\newpage  
+  
+# 9. Comparision of all models  
+  
+Now in this section we shall create multiple ROC objects and show them all on a single plot in order to understand which model best fits our test data using the given training sample and based on it we shall draw our conclusions.  
+```{r fig.align='center'}
+library(pROC)
+LogisticRegression <- roc(test_data$Class, as.numeric(lr.predict), plot = FALSE)
+DesicionTree <- roc(creditcard_data$Class, as.numeric(predicted_val),plot = FALSE)
+ArtificialNeuralNetwork <- roc(test_data$Class, as.numeric(resultANN),plot = FALSE)
+GradientBoostingModel <- roc(test_data$Class, as.numeric(gbm_test),plot = FALSE)
+plot(LogisticRegression,main = "Comparision of different Machine Learning Algorithms", col=3)
+lines(DesicionTree, col=4)
+lines(ArtificialNeuralNetwork, col=5)
+lines(GradientBoostingModel, col=6)
+legend(x="bottomright", 
+       legend = c("Logistic Regression Model", 
+                  "Desicion Tree Model", "Artificial Neural Network Model", 
+                  "Gradient Boosting Model"), 
+       fill = 3:6)
+```
+\newpage  
+  
+# 10. Conclusion  
+  
+As we can see from the graph above, the logistic regression model has the highest area under the curve; ie. it is the best fitting model to our given data. Hence we can say in future; logistic regression is the best kind of model to classify only 2 state based credit card fraud detection.  
+And we can use this to recommend it to use for real life data to detect credit card fraud and flag the seemingly  fraudulent transactions.  
+  
+***  
+  
+\newpage  
+  
+To recreate any of the above performed calculations here is the list of all packages and environment conditions given.  
+```{r}
+sessionInfo()
+```
+***
